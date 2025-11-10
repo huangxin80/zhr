@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}申请兼职 - {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h2 class="auth-title">申请兼职</h2>
+    <p style="text-align: center; color: #666; margin-bottom: 2rem;">
+        申请职位：<strong>{{ job.title }}</strong>
+    </p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.message.id_for_label }}">申请留言 *</label>
+            {{ form.message }}
+            {% if form.message.errors %}
+                <ul class="errorlist">
+                    {% for error in form.message.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">提交申请</button>
+            <a href="{% url 'jobs:job_detail' job.pk %}" class="btn btn-secondary" style="flex: 1; text-align: center; line-height: 2.5;">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

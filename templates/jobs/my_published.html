@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}我发布的兼职 - 校园兼职平台{% endblock %}
+
+{% block content %}
+<div style="background-color: white; padding: 2rem; border-radius: 15px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 style="color: #667eea;">我发布的兼职</h1>
+        <a href="{% url 'jobs:job_create' %}" class="btn btn-primary">发布新兼职</a>
+    </div>
+
+    {% if jobs %}
+        <div style="display: grid; gap: 1.5rem;">
+            {% for job in jobs %}
+                <div class="job-card">
+                    <div class="job-header">
+                        <h2 class="job-title">
+                            <a href="{% url 'jobs:job_detail' job.pk %}">{{ job.title }}</a>
+                        </h2>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <span class="job-category">{{ job.get_category_display }}</span>
+                            <span class="status-badge status-{{ job.status }}">
+                                {% if job.status == 'open' %}招募中{% else %}已结束{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="job-info">
+                        <div class="job-salary">
+                            <strong>💰 {{ job.salary }} 元</strong>
+                            <span>({{ job.get_salary_type_display }})</span>
+                        </div>
+                        <div class="job-meta">
+                            <span>📍 {{ job.location }}</span>
+                            <span>👥 招{{ job.positions }}人</span>
+                            <span>📝 {{ job.get_applied_count }}人申请</span>
+                            <span>✅ {{ job.get_accepted_count }}人接受</span>
+                        </div>
+                    </div>
+
+                    <div class="job-footer">
+                        <span>发布于 {{ job.created_at|date:"Y-m-d H:i" }}</span>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{% url 'jobs:manage_applications' job.pk %}" class="btn btn-primary btn-sm">
+                                管理申请
+                            </a>
+                            <a href="{% url 'jobs:job_edit' job.pk %}" class="btn btn-secondary btn-sm">编辑</a>
+                            <a href="{% url 'jobs:job_detail' job.pk %}" class="btn btn-secondary btn-sm">查看</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem; color: #999;">
+            <p style="font-size: 1.2rem;">您还没有发布任何兼职</p>
+            <a href="{% url 'jobs:job_create' %}" class="btn btn-primary" style="margin-top: 1rem;">发布第一个兼职</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

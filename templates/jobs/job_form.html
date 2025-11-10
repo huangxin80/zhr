@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} - 校园兼职平台{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 700px;">
+    <h2 class="auth-title">{{ action }}</h2>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.title.id_for_label }}">职位标题 *</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <ul class="errorlist">
+                    {% for error in form.title.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.category.id_for_label }}">职位类别 *</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+                <ul class="errorlist">
+                    {% for error in form.category.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.description.id_for_label }}">职位描述 *</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <ul class="errorlist">
+                    {% for error in form.description.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.requirements.id_for_label }}">任职要求</label>
+            {{ form.requirements }}
+            {% if form.requirements.errors %}
+                <ul class="errorlist">
+                    {% for error in form.requirements.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.salary.id_for_label }}">薪资 *</label>
+                {{ form.salary }}
+                {% if form.salary.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.salary.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.salary_type.id_for_label }}">薪资类型 *</label>
+                {{ form.salary_type }}
+                {% if form.salary_type.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.salary_type.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.location.id_for_label }}">工作地点 *</label>
+            {{ form.location }}
+            {% if form.location.errors %}
+                <ul class="errorlist">
+                    {% for error in form.location.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.duration.id_for_label }}">工作时长 *</label>
+            {{ form.duration }}
+            <p class="form-help">{{ form.duration.help_text }}</p>
+            {% if form.duration.errors %}
+                <ul class="errorlist">
+                    {% for error in form.duration.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.positions.id_for_label }}">招聘人数 *</label>
+            {{ form.positions }}
+            {% if form.positions.errors %}
+                <ul class="errorlist">
+                    {% for error in form.positions.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.contact.id_for_label }}">联系方式 *</label>
+            {{ form.contact }}
+            {% if form.contact.errors %}
+                <ul class="errorlist">
+                    {% for error in form.contact.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">提交</button>
+            <a href="{% if job %}{% url 'jobs:job_detail' job.pk %}{% else %}{% url 'jobs:job_list' %}{% endif %}"
+               class="btn btn-secondary" style="flex: 1; text-align: center; line-height: 2.5;">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

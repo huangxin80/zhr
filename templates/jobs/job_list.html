@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}浏览兼职 - 校园兼职平台{% endblock %}
+
+{% block content %}
+<div style="background-color: white; padding: 2rem; border-radius: 15px; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <h1 style="color: #667eea; margin: 0;">浏览兼职</h1>
+            <p style="color: #999; margin-top: 0.5rem;">共找到 {{ total_count }} 个兼职</p>
+        </div>
+        {% if user.is_authenticated %}
+            <a href="{% url 'jobs:job_create' %}" class="btn btn-primary">发布兼职</a>
+        {% endif %}
+    </div>
+
+    <!-- 搜索和快速筛选 -->
+    <form method="get" id="filterForm">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <input type="text" name="search" placeholder="🔍 搜索标题、描述、地点..." value="{{ search_query }}"
+                   style="flex: 1; min-width: 250px; padding: 0.8rem 1rem; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem;">
+
+            <select name="category" style="padding: 0.8rem 1rem; border: 2px solid #e0e0e0; border-radius: 10px; min-width: 150px;">
+                <option value="">所有分类</option>
+                {% for value, label in categories %}
+                    <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn btn-primary">搜索</button>
+            <a href="{% url 'jobs:job_list' %}" class="btn btn-secondary">重置</a>
+        </div>
+
+        <!-- 高级筛选面板 -->
+        <div class="filter-panel" id="advancedFilter">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #667eea;">
+                <h3 style="color: #667eea; margin: 0;">高级筛选</h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleFilter()">
+                    <span id="filterToggleText">收起</span> ▲
+                </button>
+            </div>
+
+            <div id="filterContent">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                    <!-- 薪资范围 -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #666; margin-bottom: 0.5rem;">💰 薪资范围</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="number" name="min_salary" placeholder="最低" value="{{ min_salary }}"
+                                   style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px;"
+                                   step="0.01" min="0">
+                            <span>-</span>
+                            <input type="number" name="max_salary" placeholder="最高" value="{{ max_salary }}"
+                                   style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px;"
+                                   step="0.01" min="0">
+                        </div>
+                    </div>
+
+                    <!-- 薪资类型 -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #666; margin-bottom: 0.5rem;">💵 薪资类型</label>
+                        <select name="salary_type" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px;">
+                            <option value="">全部</option>
+                            {% for value, label in salary_types %}
+                                <option value="{{ value }}" {% if salary_type == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- 地点筛选 -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #666; margin-bottom: 0.5rem;">📍 工作地点</label>
+                        <input type="text" name="location" placeholder="输入地点关键词" value="{{ location_filter }}"
+                               style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px;">
+                    </div>
+
+                    <!-- 排序方式 -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #666; margin-bottom: 0.5rem;">🔄 排序方式</label>
+                        <select name="order_by" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px;">
+                            <option value="newest" {% if order_by == 'newest' %}selected{% endif %}>最新发布</option>
+                            <option value="oldest" {% if order_by == 'oldest' %}selected{% endif %}>最早发布</option>
+                            <option value="salary_high" {% if order_by == 'salary_high' %}selected{% endif %}>薪资从高到低</option>
+                            <option value="salary_low" {% if order_by == 'salary_low' %}selected{% endif %}>薪资从低到高</option>
+                            <option value="positions_high" {% if order_by == 'positions_high' %}selected{% endif %}>招聘人数多</option>
+                            <option value="positions_low" {% if order_by == 'positions_low' %}selected{% endif %}>招聘人数少</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">应用筛选</button>
+                    <a href="{% url 'jobs:job_list' %}" class="btn btn-secondary" style="flex: 1; text-align: center; line-height: 2.5;">清空筛选</a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- 当前筛选标签 -->
+    {% if search_query or category or salary_type or min_salary or max_salary or location_filter %}
+    <div style="margin-top: 1.5rem; margin-bottom: 1rem;">
+        <span style="color: #666; margin-right: 0.5rem;">当前筛选：</span>
+        {% if search_query %}
+            <span class="filter-tag">关键词: {{ search_query }}</span>
+        {% endif %}
+        {% if category %}
+            <span class="filter-tag">分类: {{ category|default:"全部" }}</span>
+        {% endif %}
+        {% if salary_type %}
+            <span class="filter-tag">薪资类型: {{ salary_type }}</span>
+        {% endif %}
+        {% if min_salary %}
+            <span class="filter-tag">最低薪资: {{ min_salary }}元</span>
+        {% endif %}
+        {% if max_salary %}
+            <span class="filter-tag">最高薪资: {{ max_salary }}元</span>
+        {% endif %}
+        {% if location_filter %}
+            <span class="filter-tag">地点: {{ location_filter }}</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- 兼职列表 -->
+{% if jobs %}
+    <div style="display: grid; gap: 1.5rem;">
+        {% for job in jobs %}
+            <div class="job-card">
+                <div class="job-header">
+                    <h2 class="job-title">
+                        <a href="{% url 'jobs:job_detail' job.pk %}">{{ job.title }}</a>
+                    </h2>
+                    <span class="job-category">{{ job.get_category_display }}</span>
+                </div>
+
+                <div class="job-info">
+                    <div class="job-salary">
+                        <strong>💰 {{ job.salary }} 元</strong>
+                        <span>({{ job.get_salary_type_display }})</span>
+                    </div>
+                    <div class="job-meta">
+                        <span>📍 {{ job.location }}</span>
+                        <span>⏰ {{ job.duration }}</span>
+                        <span>👥 招{{ job.positions }}人</span>
+                    </div>
+                </div>
+
+                <p class="job-desc">{{ job.description|truncatewords:30 }}</p>
+
+                <div class="job-footer">
+                    <div>
+                        <span>发布者：{{ job.publisher.username }}</span>
+                        <span style="margin-left: 1rem;">{{ job.created_at|date:"Y-m-d H:i" }}</span>
+                    </div>
+                    <a href="{% url 'jobs:job_detail' job.pk %}" class="btn btn-primary btn-sm">查看详情</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div style="background-color: white; padding: 3rem; border-radius: 15px; text-align: center; color: #999;">
+        <p style="font-size: 1.2rem;">暂无符合条件的兼职</p>
+        <a href="{% url 'jobs:job_list' %}" class="btn btn-secondary" style="margin-top: 1rem;">查看所有兼职</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'jobs:job_create' %}" class="btn btn-primary" style="margin-top: 1rem;">发布兼职</a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<script>
+function toggleFilter() {
+    const content = document.getElementById('filterContent');
+    const text = document.getElementById('filterToggleText');
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        text.textContent = '收起';
+    } else {
+        content.style.display = 'none';
+        text.textContent = '展开';
+    }
+}
+
+// 初始化时展开筛选面板
+document.addEventListener('DOMContentLoaded', function() {
+    const hasFilters = {{ search_query|yesno:"true,false" }} ||
+                      {{ category|yesno:"true,false" }} ||
+                      {{ salary_type|yesno:"true,false" }} ||
+                      {{ min_salary|yesno:"true,false" }} ||
+                      {{ max_salary|yesno:"true,false" }} ||
+                      {{ location_filter|yesno:"true,false" }};
+    if (!hasFilters) {
+        // 默认收起高级筛选
+        document.getElementById('filterContent').style.display = 'none';
+        document.getElementById('filterToggleText').textContent = '展开';
+    }
+});
+</script>
+{% endblock %}

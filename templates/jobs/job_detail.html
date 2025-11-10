@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} - 校园兼职平台{% endblock %}
+
+{% block content %}
+<div class="job-detail-header">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <h1 style="color: #333; margin-bottom: 0.5rem;">{{ job.title }}</h1>
+            <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
+                <span class="job-category">{{ job.get_category_display }}</span>
+                <span class="status-badge status-{{ job.status }}">
+                    {% if job.status == 'open' %}招募中{% else %}已结束{% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="job-salary">
+            <strong>{{ job.salary }} 元</strong>
+            <div style="font-size: 0.9rem; color: #666;">({{ job.get_salary_type_display }})</div>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+    <!-- 左侧：详细信息 -->
+    <div>
+        <div class="job-detail-content">
+            <h2 style="color: #667eea; margin-bottom: 1rem;">职位描述</h2>
+            <p style="line-height: 1.8; white-space: pre-wrap;">{{ job.description }}</p>
+
+            {% if job.requirements %}
+                <h2 style="color: #667eea; margin-top: 2rem; margin-bottom: 1rem;">任职要求</h2>
+                <p style="line-height: 1.8; white-space: pre-wrap;">{{ job.requirements }}</p>
+            {% endif %}
+        </div>
+
+        <!-- 操作按钮 -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            {% if user.is_authenticated %}
+                {% if job.publisher == user %}
+                    <!-- 发布者可见的操作 -->
+                    <a href="{% url 'jobs:job_edit' job.pk %}" class="btn btn-primary">编辑</a>
+                    <a href="{% url 'jobs:manage_applications' job.pk %}" class="btn btn-secondary">
+                        管理申请 ({{ job.get_applied_count }})
+                    </a>
+                    {% if job.status == 'open' %}
+                        <a href="{% url 'jobs:job_close' job.pk %}" class="btn btn-secondary"
+                           onclick="return confirm('确定要结束招募吗？')">结束招募</a>
+                    {% endif %}
+                    <a href="{% url 'jobs:job_delete' job.pk %}" class="btn btn-secondary"
+                       onclick="return confirm('确定要删除此兼职吗？')">删除</a>
+                {% else %}
+                    <!-- 其他用户可见的操作 -->
+                    {% if has_applied %}
+                        {% if user_application.status == 'pending' %}
+                            <button class="btn btn-secondary" disabled>已申请（待审核）</button>
+                            <a href="{% url 'jobs:withdraw_application' user_application.pk %}" class="btn btn-secondary"
+                               onclick="return confirm('确定要撤回申请吗？')">撤回申请</a>
+                        {% elif user_application.status == 'accepted' %}
+                            <button class="btn btn-primary" disabled>✓ 申请已被接受</button>
+                            <a href="{% url 'jobs:complete_application' user_application.pk %}" class="btn btn-primary"
+                               onclick="return confirm('确认已完成这份兼职吗？')">标记完成</a>
+                        {% elif user_application.status == 'completed' %}
+                            <button class="btn btn-primary" disabled>✓ 已完成</button>
+                            {% if user_application.completed_at %}
+                                <span style="color: #28a745; margin-left: 1rem;">完成于 {{ user_application.completed_at|date:"Y-m-d H:i" }}</span>
+                            {% endif %}
+                        {% elif user_application.status == 'rejected' %}
+                            <button class="btn btn-secondary" disabled>已被拒绝</button>
+                        {% elif user_application.status == 'withdrawn' %}
+                            {% if job.status == 'open' %}
+                                <a href="{% url 'jobs:apply_job' job.pk %}" class="btn btn-primary">重新申请</a>
+                            {% endif %}
+                        {% endif %}
+                    {% elif job.status == 'open' %}
+                        <a href="{% url 'jobs:apply_job' job.pk %}" class="btn btn-primary">立即申请</a>
+                    {% else %}
+                        <button class="btn btn-secondary" disabled>招募已结束</button>
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary">登录后申请</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 右侧：基本信息 -->
+    <div class="job-detail-sidebar">
+        <h3 style="color: #667eea; margin-bottom: 1rem;">基本信息</h3>
+
+        <div class="info-row">
+            <div class="info-label">工作地点</div>
+            <div class="info-value">{{ job.location }}</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">工作时长</div>
+            <div class="info-value">{{ job.duration }}</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">招聘人数</div>
+            <div class="info-value">{{ job.positions }} 人</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">已申请</div>
+            <div class="info-value">{{ job.get_applied_count }} 人</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">已接受</div>
+            <div class="info-value">{{ job.get_accepted_count }} 人</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">联系方式</div>
+            <div class="info-value">{{ job.contact }}</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">发布者</div>
+            <div class="info-value">{{ job.publisher.username }}</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">发布时间</div>
+            <div class="info-value">{{ job.created_at|date:"Y-m-d H:i" }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

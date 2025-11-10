@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}管理申请 - {{ job.title }}{% endblock %}
+
+{% block content %}
+<div style="background-color: white; padding: 2rem; border-radius: 15px; margin-bottom: 2rem;">
+    <h1 style="color: #667eea; margin-bottom: 1rem;">管理申请</h1>
+    <p style="color: #666;">
+        兼职：<a href="{% url 'jobs:job_detail' job.pk %}" style="color: #667eea;">{{ job.title }}</a>
+    </p>
+    <div style="display: flex; gap: 2rem; margin-top: 1rem; color: #666;">
+        <span>共 {{ applications.count }} 份申请</span>
+        <span>已接受 {{ job.get_accepted_count }} 人</span>
+        <span>招聘目标 {{ job.positions }} 人</span>
+    </div>
+</div>
+
+{% if applications %}
+    <div style="display: grid; gap: 1.5rem;">
+        {% for application in applications %}
+            <div class="application-card">
+                <div class="application-header">
+                    <div>
+                        <h3 style="margin: 0 0 0.5rem 0;">{{ application.applicant.username }}</h3>
+                        <div style="color: #666; font-size: 0.9rem;">
+                            <span>邮箱：{{ application.applicant.email }}</span>
+                            {% if application.applicant.phone %}
+                                <span style="margin-left: 1rem;">手机：{{ application.applicant.phone }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="status-badge status-{{ application.status }}">
+                        {{ application.get_status_display }}
+                    </span>
+                </div>
+
+                <div style="background-color: white; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                    <p style="color: #666; margin: 0;"><strong>申请留言：</strong></p>
+                    <p style="margin: 0.5rem 0 0 0; line-height: 1.6; white-space: pre-wrap;">{{ application.message }}</p>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color: #999; font-size: 0.9rem;">
+                        <span>申请时间：{{ application.created_at|date:"Y-m-d H:i" }}</span>
+                        {% if application.status == 'completed' and application.completed_at %}
+                            <span style="margin-left: 1rem; color: #28a745;">✓ 完成时间：{{ application.completed_at|date:"Y-m-d H:i" }}</span>
+                        {% endif %}
+                    </div>
+                    {% if application.status == 'pending' %}
+                        <div class="application-actions">
+                            <a href="{% url 'jobs:update_application_status' application.pk 'accepted' %}"
+                               class="btn btn-primary btn-sm"
+                               onclick="return confirm('确定接受该申请吗？')">接受</a>
+                            <a href="{% url 'jobs:update_application_status' application.pk 'rejected' %}"
+                               class="btn btn-secondary btn-sm"
+                               onclick="return confirm('确定拒绝该申请吗？')">拒绝</a>
+                        </div>
+                    {% elif application.status == 'accepted' %}
+                        <div class="application-actions">
+                            <a href="{% url 'jobs:complete_application' application.pk %}"
+                               class="btn btn-primary btn-sm"
+                               onclick="return confirm('确认该申请者已完成兼职吗？')">标记完成</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div style="background-color: white; padding: 3rem; border-radius: 15px; text-align: center; color: #999;">
+        <p style="font-size: 1.2rem;">暂无申请</p>
+    </div>
+{% endif %}
+{% endblock %}
